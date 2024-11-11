@@ -24,14 +24,19 @@
 name: build-and-push
 
 on:
-  push:
-    branches: [ main ]
-    paths-ignore:
-      - '**.adoc'
-      - '**.md'
-    tags:     [ 'v*' ]
-  pull_request:
+#  push:
+#    branches: [ main ]
+#    paths-ignore:
+#      - '**.adoc'
+#      - '**.md'
+#    tags:     [ 'v*' ]
+#  pull_request:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Enter the version for the Docker image (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.job }}-${{ github.head_ref || github.ref_name }}'
@@ -48,20 +53,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build Docker image
-        if: ${{ !contains(github.ref, 'refs/tags/v') }}
-        uses: docker/build-push-action@v5
+      - name: Configure
+        run: |
+          sudo dd if=/dev/zero of=/swapfile bs=1M count=4096
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+
+      - name: Set version tags
+        id: version_tags
+        uses: actions/github-script@v7
         with:
-          context: .
-          file: ./Dockerfile
-          push: false
-          tags: gentoo-proxygen-container:latest
-          labels: |
-            org.opencontainers.image.title=Gentoo Proxygen Container
-            org.opencontainers.image.description=Gentoo Proxygen Container
+          script: |
+            const version = "${{ github.event.inputs.version }}";
+            const [major, minor] = version.split('.');
+            core.setOutput('fullVersion', version);
+            core.setOutput('major', major);
+            core.setOutput('majorMinor', `${major}.${minor}`);
 
       - name: Log in to the Container registry
-        if: ${{ contains(github.ref, 'refs/tags/v') }}
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -69,25 +79,22 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Docker meta
-        if: ${{ contains(github.ref, 'refs/tags/v') }}
         id: meta
         uses: docker/metadata-action@v5
         with:
-          # list of Docker images to use as base name for tags
           images: |
             ghcr.io/maxirmx/gentoo-proxygen-container
-          # generate Docker tags based on the following events/attributes
           tags: |
             type=schedule
             type=ref,event=branch
             type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=sha
+            type=semver,pattern=${{ steps.version_tags.outputs.fullVersion }}
+            type=semver,pattern=${{ steps.version_tags.outputs.majorMinor }}
+            type=semver,pattern=${{ steps.version_tags.outputs.major }}
             type=sha
 
       - name: Build and push Docker image
-        if: ${{ contains(github.ref, 'refs/tags/v') }}
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -95,4 +102,3 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
