@@ -3,7 +3,6 @@ FROM  ghcr.io/maxirmx/gentoo-proxygen-container:latest
 ARG V_PQXX=7.9.2
 ARG V_GEOIP=1.6.12
 
-RUN USE="server -libressl" emerge dev-db/postgresql 
 RUN cd root && \
     wget https://github.com/jtv/libpqxx/archive/$V_PQXX.tar.gz -O pqxx.tar.gz && \
     tar -xzvf pqxx.tar.gz && \

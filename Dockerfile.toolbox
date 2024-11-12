@@ -5,7 +5,10 @@ RUN emerge-webrsync && \
     emerge --sync && \
     emerge -uvND world 
 
-RUN emerge dev-vcs/git dev-libs/boost dev-libs/double-conversion dev-libs/libevent dev-libs/libsodium dev-cpp/gflags dev-cpp/glog && \
+RUN emerge dev-vcs/git dev-libs/boost dev-libs/double-conversion dev-libs/libevent \
+           dev-libs/libsodium dev-cpp/gflags dev-cpp/glog app-arch/snappy \ 
+           sys-devel/binutils dev-libs/jemalloc && \
+    USE="server -libressl" emerge dev-db/postgresql && \
     cd root && \
     git clone https://github.com/fastfloat/fast_float.git && \
     cp -r fast_float/include /usr/local/include/
