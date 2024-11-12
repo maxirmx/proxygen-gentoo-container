@@ -1,2 +1,2 @@
 # proxygen-gentoo-container
-Proxygen Gentoo Container
+Gentoo Docker container with preinstalled proxygen library
