@@ -1,0 +1,25 @@
+FROM  ghcr.io/maxirmx/gentoo-proxygen-container:latest
+
+ARG V_PQXX=7.9.2
+ARG V_GEOIP=1.6.12
+
+RUN USE="server -libressl" emerge dev-db/postgresql 
+RUN cd root && \
+    wget https://github.com/jtv/libpqxx/archive/$V_PQXX.tar.gz -O pqxx.tar.gz && \
+    tar -xzvf pqxx.tar.gz && \
+    pushd libpqxx-${V_PQXX} && \ 
+    cmake -B build -D CMAKE_BUILD_TYPE=Release && \
+    cmake --build build --parallel 4 && \
+    cmake --install build && \
+    rm -rf build && \
+    popd && \
+    wget https://github.com/maxmind/geoip-api-c/releases/download/v$V_GEOIP/GeoIP-$V_GEOIP.tar.gz -O geoip.tar.gz && \
+    tar -xzvf geoip.tar.gz && \
+    cd GeoIP-${V_GEOIP} && \
+    ./bootstrap && \
+    ./configure && \ 
+    make -j4 && \
+    make install && \
+    rm -rf build && \
+    mkdir -p /var/geoipdat && \
+    cp data/GeoIP.dat /var/geoipdat/
