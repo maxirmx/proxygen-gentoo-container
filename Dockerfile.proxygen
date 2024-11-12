@@ -1,0 +1,9 @@
+FROM  ghcr.io/maxirmx/gentoo-toolbox-container:latest
+
+
+RUN cd root && \
+    git clone https://github.com/facebook/proxygen.git --depth 1 && \
+    cd proxygen/proxygen  && \
+    ./build.sh	&& \
+    ./install.sh && \
+    rm -rf _build 

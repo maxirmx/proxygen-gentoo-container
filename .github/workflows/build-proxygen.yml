@@ -21,16 +21,9 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-name: build-and-push
+name: build-proxygen
 
 on:
-#  push:
-#    branches: [ main ]
-#    paths-ignore:
-#      - '**.adoc'
-#      - '**.md'
-#    tags:     [ 'v*' ]
-#  pull_request:
   workflow_dispatch:
     inputs:
       version:
@@ -89,16 +82,16 @@ jobs:
             type=ref,event=branch
             type=ref,event=pr
             type=sha
-            type=semver,pattern=${{ steps.version_tags.outputs.fullVersion }}
-            type=semver,pattern=${{ steps.version_tags.outputs.majorMinor }}
-            type=semver,pattern=${{ steps.version_tags.outputs.major }}
-            type=sha
+            type=raw,value=${{ steps.version_tags.outputs.fullVersion }}
+            type=raw,value=${{ steps.version_tags.outputs.majorMinor }}
+            type=raw,value=${{ steps.version_tags.outputs.major }}
+            type=raw,value=latest
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile
+          file: ./Dockerfile.proxygen
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
