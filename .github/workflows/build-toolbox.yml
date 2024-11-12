@@ -78,7 +78,7 @@ jobs:
             type=raw,value=${{ steps.version_tags.outputs.fullVersion }}
             type=raw,value=${{ steps.version_tags.outputs.majorMinor }}
             type=raw,value=${{ steps.version_tags.outputs.major }}
-            type=sha
+            type=raw,value=latest
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
